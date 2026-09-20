@@ -1,0 +1,474 @@
+import os
+import csv
+import json
+import requests
+
+# Question 1
+file_path = "experiments.txt"
+
+with open(file_path, "w") as file:
+    file.write("E101, CNN, MNIST, 0.001, 10\n")
+    file.write("E102, ResNet, CIFAR-10, 0.0005, 25\n")
+    file.write("E103, LSTM, IMDB, 0.01, 15\n")
+
+if os.path.exists(file_path):
+    print("File created successfully.")
+
+print("\nExperiment Configurations:")
+with open(file_path, "r") as file:
+    for line in file:
+        parts = line.strip().split(", ")
+        print("ID:", parts[0], "| Model:", parts[1], "| Dataset:", parts[2], "| Learning Rate:", parts[3], "| Epochs:", parts[4])
+
+for search_id in ["E102", "E500"]:
+    found = False
+    with open(file_path, "r") as file:
+        for line in file:
+            parts = line.strip().split(", ")
+            if parts[0] == search_id:
+                print("\nExperiment found:")
+                print("ID:", parts[0])
+                print("Model:", parts[1])
+                print("Dataset:", parts[2])
+                print("Learning Rate:", parts[3])
+                print("Epochs:", parts[4])
+                found = True
+    if not found:
+        print("\nExperiment", search_id, "not found.")
+
+new_experiment = "E104, BERT, SQuAD, 0.00002, 3\n"
+
+with open(file_path, "a") as file:
+    file.write(new_experiment)
+
+print("\nNew experiment added successfully.")
+
+update_id = "E101"
+new_learning_rate = "0.005"
+new_epochs = "30"
+updated = False
+
+with open(file_path, "r") as file:
+    lines = file.readlines()
+
+for index, line in enumerate(lines):
+    parts = line.strip().split(", ")
+    if parts[0] == update_id:
+        parts[3] = new_learning_rate
+        parts[4] = new_epochs
+        lines[index] = ", ".join(parts) + "\n"
+        updated = True
+
+if updated:
+    with open(file_path, "w") as file:
+        file.writelines(lines)
+    print("Experiment", update_id, "updated successfully.")
+else:
+    print("Experiment", update_id, "not found.")
+
+for remove_id in ["E103", "E999"]:
+    removed = False
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+    with open(file_path, "w") as file:
+        for line in lines:
+            if line.split(", ")[0] == remove_id:
+                removed = True
+            else:
+                file.write(line)
+    if removed:
+        print("Experiment", remove_id, "removed successfully.")
+    else:
+        print("Experiment", remove_id, "not found.")
+
+print("\nFinal Experiment Configurations:")
+with open(file_path, "r") as file:
+    data = file.read()
+    print(data)
+
+# Question 2
+file_path = "patients.csv"
+fieldnames = ["ID", "Age", "BMI", "BloodPressure", "Glucose", "Outcome"]
+
+with open(file_path, "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerow(fieldnames)
+    writer.writerow([1, 50, 33.6, 72, 148, 1])
+    writer.writerow([2, 31, 26.6, 66, 85, 0])
+    writer.writerow([3, 32, 23.3, 64, 110, 0])
+    writer.writerow([4, 21, 28.1, 66, 89, 0])
+    writer.writerow([5, 33, 43.1, 40, 137, 1])
+    writer.writerow([6, 30, 25.6, 74, 116, 0])
+    writer.writerow([7, 29, 31.0, 70, 99, 0])
+    writer.writerow([8, 53, 35.3, 78, 197, 1])
+    writer.writerow([9, 54, 30.5, 96, 125, 1])
+    writer.writerow([10, 34, 37.6, 92, 168, 1])
+
+print("Patient Records:")
+with open(file_path, "r", newline="") as file:
+    reader = csv.reader(file)
+    header = next(reader)
+    print(header)
+    for row in reader:
+        print(row)
+
+with open(file_path, "r", newline="") as file:
+    reader = csv.DictReader(file)
+    patients = list(reader)
+
+positive_cases = 0
+negative_cases = 0
+
+for patient in patients:
+    if patient["Outcome"] == "1":
+        positive_cases += 1
+    else:
+        negative_cases += 1
+
+print("\nPositive Cases:", positive_cases)
+print("Negative Cases:", negative_cases)
+
+threshold = 140
+print("\nPatients with glucose level above", threshold, ":")
+for patient in patients:
+    if float(patient["Glucose"]) > threshold:
+        print(patient)
+
+total_bmi = 0
+total_glucose = 0
+
+for patient in patients:
+    total_bmi += float(patient["BMI"])
+    total_glucose += float(patient["Glucose"])
+
+average_bmi = total_bmi / len(patients)
+average_glucose = total_glucose / len(patients)
+
+print("\nAverage BMI:", round(average_bmi, 2))
+print("Average Glucose Level:", round(average_glucose, 2))
+
+new_patient = {"ID": 11, "Age": 39, "BMI": 30.2, "BloodPressure": 82, "Glucose": 148, "Outcome": 1}
+
+with open(file_path, "a", newline="") as file:
+    writer = csv.DictWriter(file, fieldnames=fieldnames)
+    writer.writerow(new_patient)
+
+print("\nNew patient record added successfully.")
+
+update_id = "3"
+updated_values = {"Glucose": "165", "Outcome": "1"}
+found = False
+
+with open(file_path, "r", newline="") as file:
+    reader = csv.DictReader(file)
+    patients = list(reader)
+
+for patient in patients:
+    if patient["ID"] == update_id:
+        patient.update(updated_values)
+        found = True
+
+if found:
+    with open(file_path, "w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(patients)
+    print("Patient record", update_id, "updated successfully.")
+else:
+    print("Patient", update_id, "not found.")
+
+print("\nUpdated Patient Records:")
+with open(file_path, "r", newline="") as file:
+    reader = csv.reader(file)
+    for row in reader:
+        print(row)
+
+# Question 3
+file_path = "model_results.json"
+
+model_results = [
+    {"model": "Logistic Regression", "accuracy": 0.86, "precision": 0.84, "recall": 0.82, "f1_score": 0.83},
+    {"model": "Random Forest", "accuracy": 0.93, "precision": 0.94, "recall": 0.88, "f1_score": 0.91},
+    {"model": "SVM", "accuracy": 0.90, "precision": 0.89, "recall": 0.95, "f1_score": 0.92},
+    {"model": "KNN", "accuracy": 0.83, "precision": 0.81, "recall": 0.79, "f1_score": 0.80}
+]
+
+with open(file_path, "w") as file:
+    json.dump(model_results, file, indent=4)
+
+print("Model results file created successfully.")
+
+with open(file_path, "r") as file:
+    models = json.load(file)
+
+best_accuracy_model = models[0]
+best_f1_model = models[0]
+
+for model in models:
+    if model["accuracy"] > best_accuracy_model["accuracy"]:
+        best_accuracy_model = model
+    if model["f1_score"] > best_f1_model["f1_score"]:
+        best_f1_model = model
+
+print("\nModel with highest accuracy:", best_accuracy_model["model"], "-", best_accuracy_model["accuracy"])
+print("Model with highest F1-score:", best_f1_model["model"], "-", best_f1_model["f1_score"])
+
+new_model = {"model": "XGBoost", "accuracy": 0.94, "precision": 0.93, "recall": 0.92, "f1_score": 0.925}
+models.append(new_model)
+print("\nNew model result added successfully.")
+
+update_model = "KNN"
+new_metrics = {"accuracy": 0.86, "precision": 0.84, "recall": 0.83, "f1_score": 0.835}
+found = False
+
+for model in models:
+    if model["model"] == update_model:
+        model.update(new_metrics)
+        found = True
+
+if found:
+    print(update_model, "metrics updated successfully.")
+else:
+    print(update_model, "not found.")
+
+remove_model = "Logistic Regression"
+total_models = len(models)
+models = [
+    model for model in models
+    if model["model"] != remove_model
+]
+
+if len(models) < total_models:
+    print(remove_model, "removed successfully.")
+else:
+    print(remove_model, "not found.")
+
+with open(file_path, "w") as file:
+    json.dump(models, file, indent=4)
+
+print("\nModified results saved successfully.")
+
+with open(file_path, "r") as file:
+    saved_models = json.load(file)
+
+print(json.dumps(saved_models, indent=4))
+
+# Question 4
+url = "https://api.genderize.io"
+name = "Ahmed"
+params = {"name": name}
+
+try:
+    response = requests.get(url, params=params, timeout=5)
+    print("Status Code:", response.status_code)
+    response.raise_for_status()
+    if response.status_code == 200:
+        data = response.json()
+        print("Input Name:", data.get("name"))
+        if data.get("gender") is None:
+            print("The API could not predict a result for this input.")
+        else:
+            print("Predicted Gender:", data["gender"])
+            print("Confidence Score:", data["probability"])
+            print("Sample Count:", data["count"])
+    else:
+        print("The API did not return the requested result.")
+except requests.exceptions.Timeout:
+    print("Request timed out.")
+except requests.exceptions.ConnectionError:
+    print("Connection error.")
+except requests.exceptions.HTTPError as error:
+    print("HTTP error occurred:", error)
+except ValueError:
+    print("Invalid response received from the API.")
+except (KeyError, AttributeError):
+    print("Unexpected response format from the API.")
+except requests.exceptions.RequestException as error:
+    print("Request failed:", error)
+
+# Question 5
+url = "https://jsonplaceholder.typicode.com/comments"
+post_id = input("\nEnter a post ID (1-100) to fetch comments: ")
+params = {"postId": post_id}
+
+try:
+    response = requests.get(url, params=params, timeout=5)
+    response.raise_for_status()
+    data = response.json()
+    if not isinstance(data, list) or len(data) == 0:
+        print("No text data found for this query.")
+    else:
+        texts = []
+        for item in data:
+            text_record = {
+                "id": item["id"],
+                "post_id": item["postId"],
+                "author": item["email"],
+                "title": item["name"],
+                "text": item["body"]
+            }
+            texts.append(text_record)
+            print("\nID:", text_record["id"])
+            print("Author:", text_record["author"])
+            print("Title:", text_record["title"])
+            print("Text:", text_record["text"])
+        with open("texts.json", "w", encoding="utf-8") as file:
+            json.dump(texts, file, indent=4)
+        with open("texts.csv", "w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=["id", "post_id", "author", "title", "text"])
+            writer.writeheader()
+            writer.writerows(texts)
+        print("\nText data saved to texts.json and texts.csv successfully.")
+except requests.exceptions.Timeout:
+    print("Request timed out.")
+except requests.exceptions.ConnectionError:
+    print("Connection error.")
+except requests.exceptions.HTTPError as error:
+    print("HTTP error occurred:", error)
+except ValueError:
+    print("Invalid response received from the API.")
+except KeyError:
+    print("Unexpected response format from the API.")
+except requests.exceptions.RequestException as error:
+    print("Request failed:", error)
+except OSError as error:
+    print("File error:", error)
+
+# Question 6
+url = "https://jsonplaceholder.typicode.com/photos"
+
+try:
+    response = requests.get(url + "/1", timeout=5)
+    response.raise_for_status()
+    print("\nGET Status Code:", response.status_code)
+    print("GET Response:", response.json())
+
+    image = {
+        "albumId": 1,
+        "title": "cat",
+        "url": "https://images.example.com/cat.jpg",
+        "thumbnailUrl": "https://images.example.com/cat_thumb.jpg"
+    }
+
+    response = requests.post(url, json=image, timeout=5)
+    response.raise_for_status()
+    print("\nPOST Status Code:", response.status_code)
+    print("POST Response:", response.json())
+
+    image = {
+        "albumId": 1,
+        "title": "dog",
+        "url": "https://images.example.com/dog.jpg",
+        "thumbnailUrl": "https://images.example.com/dog_thumb.jpg"
+    }
+
+    response = requests.put(url + "/1", json=image, timeout=5)
+    response.raise_for_status()
+    print("\nPUT Status Code:", response.status_code)
+    print("PUT Response:", response.json())
+
+    response = requests.patch(url + "/1", json={"title": "wolf"}, timeout=5)
+    response.raise_for_status()
+    print("\nPATCH Status Code:", response.status_code)
+    print("PATCH Response:", response.json())
+
+    response = requests.delete(url + "/1", timeout=5)
+    response.raise_for_status()
+    print("\nDELETE Status Code:", response.status_code)
+    print("DELETE Response:", response.json())
+except requests.exceptions.Timeout:
+    print("Request timed out.")
+except requests.exceptions.ConnectionError:
+    print("Connection error.")
+except requests.exceptions.HTTPError as error:
+    print("HTTP error occurred:", error)
+except ValueError:
+    print("Invalid response received from the API.")
+except requests.exceptions.RequestException as error:
+    print("Request failed:", error)
+
+# Question 7
+url = "https://api.agify.io"
+names = ["ahmed", "sara", "ali", "fatima", "hassan", "ayesha", "bilal", "zainab"]
+params = {"name[]": names}
+
+try:
+    response = requests.get(url, params=params, timeout=5)
+    print("\nStatus Code:", response.status_code)
+    response.raise_for_status()
+    data = response.json()
+
+    results = []
+    for item in data:
+        if item["age"] is not None:
+            results.append({"name": item["name"], "age": item["age"], "count": item["count"]})
+
+    total_age = 0
+    categories = {"Below 30": 0, "30 to 49": 0, "50 and above": 0}
+
+    for result in results:
+        total_age += result["age"]
+        if result["age"] < 30:
+            categories["Below 30"] += 1
+        elif result["age"] < 50:
+            categories["30 to 49"] += 1
+        else:
+            categories["50 and above"] += 1
+
+    average_age = total_age / len(results)
+
+    highest_result = results[0]
+    for result in results:
+        if result["count"] > highest_result["count"]:
+            highest_result = result
+
+    with open("api_results.json", "w", encoding="utf-8") as file:
+        json.dump(results, file, indent=4)
+
+    with open("api_results.csv", "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=["name", "age", "count"])
+        writer.writeheader()
+        writer.writerows(results)
+
+    with open("api_results.json", "r", encoding="utf-8") as file:
+        saved_json = json.load(file)
+
+    with open("api_results.csv", "r", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        saved_csv = list(reader)
+except requests.exceptions.Timeout:
+    print("Request timed out.")
+except requests.exceptions.ConnectionError:
+    print("Connection error.")
+except requests.exceptions.HTTPError as error:
+    print("HTTP error occurred:", error)
+except FileNotFoundError:
+    print("File not found.")
+except ValueError:
+    print("Invalid JSON data.")
+except (KeyError, TypeError):
+    print("Unexpected response format from the API.")
+except ZeroDivisionError:
+    print("The API did not return any valid predictions.")
+except requests.exceptions.RequestException as error:
+    print("Request failed:", error)
+except OSError as error:
+    print("File error:", error)
+else:
+    print("\nPredictions received:")
+    for result in results:
+        print(result)
+    print("\nAverage Predicted Age:", round(average_age, 2))
+    print("Age Categories:", categories)
+    print("Highest Sample Count:", highest_result["name"], "-", highest_result["count"])
+
+    result_names = [result["name"] for result in results]
+    json_names = [item["name"] for item in saved_json]
+    csv_names = [row["name"] for row in saved_csv]
+
+    print("\nRecords in api_results.json:", len(saved_json))
+    print("Records in api_results.csv:", len(saved_csv))
+    print("JSON file verified:", json_names == result_names)
+    print("CSV file verified:", csv_names == result_names)
+finally:
+    print("\nProgram finished.")
